@@ -27,12 +27,11 @@ const Footer = (props) => {
                   <div className="col-lg-4 px-lg-5 mb-4 mb-lg-0">
                     <h3 className="footer_title">Contact</h3>
                     <p className="footer_text">
-                      <a>dodiyameet041@gmail.com</a>
+                      <a>womensafety@gmail.com</a>
                       <br />
                       <a className="footer-address">
-                        K.T Marg, Vidyavardhini's College of Engineering and
-                        Technology, <br />
-                        Vasai, Maharashtra, India
+                        GLA University, <br />
+                        Mathura, Uttar Pradesh, India
                       </a>
                     </p>
                   </div>
@@ -57,7 +56,7 @@ const Footer = (props) => {
                   </div>
                   <div className="col-12 footer_credits text-center">
                     <span>
-                      © 2023 <a>Women Safety</a>™. All Rights Reserved.
+                      © 2026 <a>Women Safety</a>™. All Rights Reserved.
                     </span>
                   </div>
                 </div>
