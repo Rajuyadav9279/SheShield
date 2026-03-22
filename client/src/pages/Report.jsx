@@ -1,58 +1,50 @@
-import React, { useState } from 'react'
-import axios from 'axios'
-import { useAuth } from '../context/auth'
-import toast from 'react-hot-toast'
-import reports from '../images/report.png'
-import Navbar from '../Components/Navbar/Navbar'
-import Footer from '../Components/Footer/Footer'
+import React, { useState } from 'react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import reports from '../images/report.png';
+import Navbar from '../Components/Navbar/Navbar';
+import Footer from '../Components/Footer/Footer';
 
 const Report = () => {
+  const [report, setReport] = useState('');
+  const [pincodeOfIncident, setPincodeOfIncident] = useState('');
+  const [address, setAddress] = useState('');
 
-  const [report, setReport] = useState('')
-  const [pincodeOfIncident, setpincodeOfIncident] = useState('')
-  const [address, setAddress] = useState('')
-  const [auth] = useAuth()
+  const BASE_URL = "http://localhost:8000/api/v1"; // Your local backend
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!report.trim()) {
-      toast.error('Report is Required!')
-      return
-    }
-
-    if (!pincodeOfIncident.trim()) {
-      toast.error('PinCode is Required!')
-      return
-    }
-
-    if (!address.trim()) {
-      toast.error('Address is Required!')
-      return
-    }
+    if (!report.trim()) return toast.error('Report is Required!');
+    if (!pincodeOfIncident.trim()) return toast.error('PinCode is Required!');
+    if (!address.trim()) return toast.error('Address is Required!');
 
     try {
-      const res = await axios.post(
-        'https://womensecbackend.onrender.com/api/v1/incidents',
-        {
-          user: auth?.user?._id,
-          report,
-          pincodeOfIncident,
-          address
-        }
-      )
+      const auth = JSON.parse(localStorage.getItem("auth"));
+      const token = auth?.token;
+
+      if (!token) return toast.error("Please login first");
+
+      const formData = new FormData();
+      formData.append("report", report);
+      formData.append("pincodeOfIncident", pincodeOfIncident);
+      formData.append("address", address);
+
+      const res = await axios.post(`${BASE_URL}/incidents`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (res.status === 201) {
-        toast.success('Incident Reported Successfully')
-        setReport('')
-        setpincodeOfIncident('')
-        setAddress('')
+        toast.success('Incident Reported Successfully');
+        setReport('');
+        setPincodeOfIncident('');
+        setAddress('');
       }
-
     } catch (err) {
-      toast.error('Error in Sending Report')
+      console.log("ERROR:", err.response?.data || err.message);
+      toast.error(err.response?.data?.message || 'Error in Sending Report');
     }
-  }
+  };
 
   return (
     <>
@@ -60,44 +52,32 @@ const Report = () => {
 
       <div className="marginStyle">
         <div className="container d-flex justify-content-center align-items-center">
-
           <div className="row border rounded-5 p-3 bg-white shadow box-area reverseCol">
-
             {/* LEFT IMAGE */}
-
             <div className="col-md-6 rounded-4 d-flex justify-content-center align-items-center flex-column left-box">
-
               <div className="featured-image mb-3 animateImg">
                 <img src={reports} className="img-fluid" alt="report" />
               </div>
-
             </div>
 
             {/* FORM */}
-
             <form className="col-md-6 right-box" onSubmit={handleSubmit}>
-
               <div className="row align-items-center">
-
                 <div className="header-text mb-4">
                   <h2>Incident Report</h2>
                   <p>Tell us your incident, we will take action against it!</p>
                 </div>
 
-                {/* PINCODE */}
-
                 <div className="input-group mb-3">
                   <input
                     type="number"
                     value={pincodeOfIncident}
-                    onChange={(e) => setpincodeOfIncident(e.target.value)}
+                    onChange={(e) => setPincodeOfIncident(e.target.value)}
                     className="form-control form-control-lg border-dark fs-6"
                     placeholder="Enter the Pincode of the Incident"
                     required
                   />
                 </div>
-
-                {/* REPORT */}
 
                 <div className="input-group mb-3">
                   <textarea
@@ -110,8 +90,6 @@ const Report = () => {
                   />
                 </div>
 
-                {/* ADDRESS */}
-
                 <div className="input-group mb-3">
                   <textarea
                     rows={3}
@@ -123,30 +101,24 @@ const Report = () => {
                   />
                 </div>
 
-                {/* BUTTON */}
-
                 <div className="d-flex my-3">
                   <button
+                    type="submit"
                     className="btn text-white btn-lg btn-block"
                     style={{ width: '100%', backgroundColor: 'blueviolet' }}
-                    type="submit"
                   >
                     Submit Incident
                   </button>
                 </div>
-
               </div>
-
             </form>
-
           </div>
-
         </div>
       </div>
 
       <Footer />
     </>
-  )
-}
+  );
+};
 
-export default Report
+export default Report;

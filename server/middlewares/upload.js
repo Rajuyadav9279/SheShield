@@ -1,30 +1,53 @@
+// const path = require('path');
+// const multer = require('multer');
+
+// // STORAGE CONFIG
+// const storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, 'uploads/'); // make sure folder exists
+//   },
+//   filename: function (req, file, cb) {
+//     const ext = path.extname(file.originalname);
+//     cb(null, Date.now() + ext);
+//   }
+// });
+
+// // FILE FILTER (ALLOW ONLY IMAGES)
+// const fileFilter = (req, file, cb) => {
+//   if (
+//     file.mimetype === "image/png" ||
+//     file.mimetype === "image/jpg" ||
+//     file.mimetype === "image/jpeg"
+//   ) {
+//     cb(null, true);
+//   } else {
+//     cb(new Error("Only image files allowed"), false);
+//   }
+// };
+
+// // MULTER CONFIG
+// const upload = multer({
+//   storage: storage,
+//   fileFilter: fileFilter,
+//   limits: {
+//     fileSize: 1024 * 1024 * 5 // 5MB limit (better)
+//   }
+// });
+
+// module.exports = upload;
 const path = require('path');
 const multer = require('multer');
-var storage = multer.diskStorage({
-    destination: function (req,file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename: function(req,file, cb){
-        let ext = path.extname(file.originalname);
-        cb(null, Date.now() + ext)
-    }
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now() + ext);
+  }
 });
 
-var upload = multer({
-    storage: storage,
-    // fileFilter: function(req,file, cb){
-    //     if(file.mimetype == "image/png" || file.mimetype == " image/jpg" ||
-    //        file.mimetype == "image/jpeg"
-    //       ){
-    //         cb(null,true);
-    //        }else{
-    //             res.status(403);
-    //             throw new Error("Only pdf,docx,zip,ppt,pptx,docx formats are allowed");
-    //        }
-    // },
-    limits: {
-        fileSize: 1024 * 1024 * 40
-    }
-});
+const upload = multer({ storage });
 
-module.exports = upload
+module.exports = upload;

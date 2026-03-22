@@ -1,11 +1,13 @@
-const Router = require("express");
-const router = Router();
-const {addChats,getChats} = require('../controllers/chatCntrl')
+const express = require("express");
+const router = express.Router();
+
+const { addChats, getChats } = require('../controllers/chatCntrl');
 const validateToken = require('../middlewares/validateToken');
 
-router.route('/').post(addChats);
-router.route('/:id/emergncye/:emerg').get(getChats);
+// SEND MESSAGE
+router.post('/', validateToken, addChats);
 
-
+// GET CHAT
+router.get('/:id/emergency/:emerg', validateToken, getChats);
 
 module.exports = router;

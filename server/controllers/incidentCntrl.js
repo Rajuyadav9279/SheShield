@@ -1,102 +1,62 @@
 const asyncHandler = require('express-async-handler');
 const { Incident } = require('../models/incidentRptModel');
-const { User } = require('../models/userModel')
-
 const fs = require('fs');
-const path = require('path')
-const AWS = require('aws-sdk')
+const AWS = require('aws-sdk');
 require('dotenv').config();
 
+// AWS CONFIG
 AWS.config.update({
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: 'us-east-2'
-})
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: 'us-east-2'
+});
 
 const s3 = new AWS.S3();
 
+// ================= ADD INCIDENT =================
 const addIncident = asyncHandler(async (req, res) => {
 
-    const { user, report, pincodeOfIncident, mimeType, address } = req.body;
-    const note= req.file.path
+  console.log("REQ USER:", req.user); // ✅ DEBUG
 
-    
-    if(note){
-        const params = {
-            Bucket: process.env.AWS_BUCKET_NAME,
-            Key: note,
-            Body: fs.createReadStream(req.file.path),
-            ContentType: mimeType
-        }
-        const s3Response = await s3.upload(params).promise();
-        const incFile = s3Response.Location;
-       
+  const { report, pincodeOfIncident, address } = req.body;
 
-        const incident = await Incident.create({
-            user,
-            report,
-            pincodeOfIncident,
-            address,
-            meidaSt: incFile
-        })
+  const user = req.user?.id; // ✅ FROM TOKEN
 
+  if (!user) {
+    return res.status(401).json({ message: "User not found in token" });
+  }
 
+  const incident = await Incident.create({
+    user,
+    report,
+    pincodeOfIncident,
+    address
+  });
 
-        if(incident){
-            res.status(201).json({message: "Incident reported successfully"})
-        }else{
-            res.status(500).json({message: "Something went wrong"})
-        }
-    }else{
-        const incident = await Incident.create({
-            user,
-            report,
-            address,
-            pincodeOfIncident
-        })
-
-        if(incident){
-            res.status(201).json({message: "Incident reported successfully"})
-        }else{
-            res.status(500).json({message: "Something went wrong"})
-        }
-    }
-
+  res.status(201).json({ message: "Incident reported successfully" });
 });
 
+// ================= GET INCIDENTS =================
+const getAllIncidents = asyncHandler(async (req, res) => {
+  const incidents = await Incident.find()
+    .populate("user", "uname email")
+    .sort({ createdAt: -1 });
 
-const getAllIncidents = asyncHandler(async(req,res) => {
-
-    const incidents = await Incident.find({});
-    const data = []
-    for(const x of incidents){
-        const user = await User.findById(x.user);
-        console.log(user)
-        if(user){
-            data.push({
-                uname: user.uname,
-                address: x.address,
-                pincode: x.pincodeOfIncident,
-                report: x.report,
-                isSeen: x.isSeen,
-                image: x.meidaSt || "empty",
-                createdAt: x.createdAt,
-                updatedAt: x.updatedAt
-            })
-        }
-        
-    }
-    res.status(200).json(data)
+  res.status(200).json(incidents);
 });
 
-const acknowledgeInc = asyncHandler(async(req,res) => {
+// ================= ACKNOWLEDGE =================
+const acknowledgeInc = asyncHandler(async (req, res) => {
+  const incident = await Incident.findById(req.params.id);
 
-    const inc = req.params.id;
-    const incident = await Incident.findById(inc);
-    if(incident){
-        incident.isSeen = true;
-        await incident.save()
-    }
-})
+  if (!incident) {
+    return res.status(404).json({ message: "Not found" });
+  }
 
-module.exports = {addIncident ,getAllIncidents,acknowledgeInc}
+  incident.isSeen = true;
+  await incident.save();
+
+  res.json({ message: "Marked as seen" });
+});
+
+module.exports = { addIncident, getAllIncidents, acknowledgeInc };
