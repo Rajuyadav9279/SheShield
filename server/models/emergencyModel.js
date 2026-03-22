@@ -1,21 +1,30 @@
 const mongoose = require("mongoose");
 
-const EmergencySchema = mongoose.Schema({
-    user:{
-        type: mongoose.Types.ObjectId,
-        ref: "User"
+const EmergencySchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-    emergencyLctOnMap:{
-        type:String,
+    emergencyLctOnMap: {
+      type: String,
+      required: true,
     },
-    addressOfIncd:{
-        type:String
+    addressOfIncd: {
+      type: String,
+      required: true,
     },
-    isResolved:{
-        type: Boolean,
-        default: false
-    }
-}, {timestamps: true});
+    pincode: {
+      type: String,
+    },
+    isResolved: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { timestamps: true }
+);
 
 const Emergency = mongoose.model("Emergency", EmergencySchema);
-module.exports = {Emergency}
+module.exports = { Emergency };

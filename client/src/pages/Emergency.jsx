@@ -1,125 +1,111 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "../styles/Emergency.css";
 import { PiShieldCheckBold } from "react-icons/pi";
 import Parallelx from "../Components/Parallelx";
 import Navbar from "../Components/Navbar/Navbar";
 import Footer from "../Components/Footer/Footer";
 import { useAuth } from "../context/auth";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 const Emergency = () => {
+  const [long, setLong] = useState("");
+  const [lat, setLat] = useState("");
+  const [auth] = useAuth();
 
-const [long, setLong] = useState("");
-const [lat, setLat] = useState("");
-const [auth] = useAuth();
+  const handleSubmit = async () => {
+    try {
+      if (!auth?.user?._id) {
+        toast.error("Please login first");
+        return;
+      }
 
-const handleSubmit = async () => {
+      if (!lat || !long) {
+        toast.error("Location not loaded");
+        return;
+      }
 
-```
-try {
+      const payload = {
+        userId: auth?.user?._id,
+        lat: lat,
+        long: long,
+      };
 
-  console.log(lat);
-  console.log(long);
+      const res = await fetch(
+        "http://localhost:8000/api/v1/emergency/emergencyPressed",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
-  const payload = {
-    userId: auth?.user?._id,
-    lat: lat,
-    long: long,
+      const data = await res.json();
+
+      if (res.status === 200) {
+        toast.success("SOS SENT SUCCESSFULLY");
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Something went wrong");
+    }
   };
 
-  console.log(payload);
+  const showPosition = (position) => {
+    setLat(position.coords.latitude);
+    setLong(position.coords.longitude);
+  };
 
-  const res = await fetch(
-    "https://womensecbackend.onrender.com/api/v1/emergency/emergencypressed",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
+  const getLocation = useCallback(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        showPosition,
+        (error) => {
+          console.log(error);
+          toast.error("Allow location access");
+        }
+      );
     }
-  );
+  }, []);
 
-  if (res.status === 200) {
-    toast.success("SOS SENT SUCCESSFULLY");
-  } else {
-    toast.error("SOS FAILED");
-  }
+  useEffect(() => {
+    getLocation();
+    window.scrollTo(0, 0);
+  }, [getLocation]);
 
-} catch (error) {
+  return (
+    <>
+      <Navbar />
+      <div className="heightRes">
+        <section className="banner_wrapper">
+          <div className="container">
+            <div className="row align-items-center">
+              <div className="col-md-12 text-center">
+                <p className="banner-subtitle">
+                  SheShield – Your Safety Our Priority
+                </p>
 
-  console.log(error);
-  toast.error("Something went wrong");
+                <h1 className="banner-title mb-5">
+                  Help us bring <span>Women Safety</span> to Reality
+                </h1>
 
-}
-```
+                <button className="button-30" onClick={handleSubmit}>
+                  <PiShieldCheckBold size={180} color="red" />
+                </button>
 
-};
-
-const showPosition = (position) => {
-const latitude = position.coords.latitude;
-const longitude = position.coords.longitude;
-
-```
-setLat(latitude);
-setLong(longitude);
-```
-
-};
-
-const getLocation = () => {
-if (navigator.geolocation) {
-navigator.geolocation.getCurrentPosition(showPosition);
-} else {
-console.log("Geolocation not supported");
-}
-};
-
-useEffect(() => {
-getLocation();
-window.scrollTo(0, 0);
-}, []);
-
-return (
-<> <Navbar />
-
-```
-  <div className="heightRes">
-    <section className="banner_wrapper">
-      <div className="container">
-
-        <div className="row align-items-center">
-
-          <div className="col-md-12 text-center">
-
-            <p className="banner-subtitle">
-              SheShield – Your Safety Our Priority
-            </p>
-
-            <h1 className="banner-title mb-5">
-              Help us bring <span>Women Safety</span> to Reality
-            </h1>
-
-            <button
-              className="button-30"
-              onClick={handleSubmit}
-            >
-              <PiShieldCheckBold size={180} color="red" />
-            </button>
-
+              </div>
+            </div>
           </div>
-
-        </div>
-
+        </section>
       </div>
-    </section>
-  </div>
 
-  <Parallelx />
-  <Footer />
-</>
-
-);
+      <Parallelx />
+      <Footer />
+    </>
+  );
 };
 
 export default Emergency;

@@ -1,128 +1,157 @@
 const asyncHandler = require("express-async-handler");
-const {User} = require('../models/userModel');
-const {Emergency} = require('../models/emergencyModel')
+const { User } = require("../models/userModel");
+const { Emergency } = require("../models/emergencyModel");
+const { sendHelpEmail, sendHelpEmailContacts } = require("../utils/email");
+const axios = require("axios");
 
-const {sendHelpEmail,sendHelpEmailContacts} = require('../utils/email')
-const axios = require('axios')
-let pincode;
-let formattedAddress;
+// Reverse Geocoding Function
+const getAddress = async (lat, long) => {
+  try {
+    const { data } = await axios.get(
+      `https://apis.mapmyindia.com/advancedmaps/v1/${process.env.MAP_API}/rev_geocode?lat=${lat}&lng=${long}`
+    );
 
-
-const getData = async(url) => {
-
-  try{
-    
-    let {data} = await axios.get(url)
-    
-    return data
-  }catch(e){
-    console.log(e.message);
-  }
-}
-
-const sendemergencyCntrl = asyncHandler(async (req, res) => {
-  
-  const {userId, lat, long} = req.body;
-  if(!lat || !long){
-    res.status(403).json({message: "latitude or longitude is missing"})
-  }
-  const resp = await getData(`https://apis.mapmyindia.com/advancedmaps/v1/efd1bc9e76b7a36cb990af517a48f3c3/rev_geocode?lat=${lat}&lng=${long}`)
-  pincode = resp.results[0].pincode;
-  formattedAddress = resp.results[0].formatted_address;
-  const  user = await User.findById(userId);
-  const recipients = [user.emergencyMail];
-  recipients.push()
-  if(!user){
-    res.status(404).json({message: "User not found"})
-  }
-  
-  if(user.extraEmail1){
-    recipients.push(user.extraEmail1)
-  }else if(user.extraEmail2){
-    recipients.push(user.extraEmail2)
-  }
-
-  await sendHelpEmail(recipients, lat, long , user.uname, pincode,formattedAddress);
-  const nearby =[]
-  const users = await User.find({pinCode: pincode});
-  if(users){
-    for(const x of users){
-      nearby.push(x.email);
+    if (data && data.results && data.results.length > 0) {
+      return {
+        pincode: data.results[0].pincode,
+        formatted_address: data.results[0].formatted_address,
+      };
+    } else {
+      return {
+        pincode: "Unknown",
+        formatted_address: "Location not found",
+      };
     }
+  } catch (err) {
+    console.log("Map API Error:", err.message);
+    return {
+      pincode: "Unknown",
+      formatted_address: "Location not found",
+    };
+  }
+};
+
+// Send Emergency
+const sendemergencyCntrl = asyncHandler(async (req, res) => {
+  const { userId, lat, long } = req.body;
+
+  if (!userId || !lat || !long) {
+    return res.status(400).json({ message: "UserId, Latitude or Longitude missing" });
   }
 
-  await sendHelpEmailContacts(nearby, lat, long , user.uname, pincode,formattedAddress)
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
 
-  
+  // Get Address from coordinates
+  const locationData = await getAddress(lat, long);
+  const pincode = locationData.pincode;
+  const formattedAddress = locationData.formatted_address;
 
+  // Trusted Contacts Emails
+  const recipients = [];
+  if (user.emergencyMail) recipients.push(user.emergencyMail);
+  if (user.extraEmail1) recipients.push(user.extraEmail1);
+  if (user.extraEmail2) recipients.push(user.extraEmail2);
+
+  // Send email to trusted contacts
+  if (recipients.length > 0) {
+    await sendHelpEmail(recipients, lat, long, user.uname, pincode, formattedAddress);
+  }
+
+  // Send email to nearby users
+  const nearbyUsers = await User.find({ pinCode: pincode });
+  const nearbyEmails = nearbyUsers.map((u) => u.email);
+
+  if (nearbyEmails.length > 0) {
+    await sendHelpEmailContacts(
+      nearbyEmails,
+      lat,
+      long,
+      user.uname,
+      pincode,
+      formattedAddress
+    );
+  }
+
+  // Save Emergency in DB
   const emergency = await Emergency.create({
     user: userId,
-    emergencyLctOnMap: `https://maps.google.com/maps?q=${lat},${long}&hl=en&z=14&amp`,
-    addressOfIncd: formattedAddress
-  })
+    emergencyLctOnMap: `https://maps.google.com/maps?q=${lat},${long}`,
+    addressOfIncd: formattedAddress,
+    pincode: pincode,
+    isResolved: false,
+  });
 
-  res.status(200).json({message: "Sent an SOS for help"})
-  
-
+  res.status(200).json({
+    message: "SOS sent successfully",
+    emergencyId: emergency._id,
+  });
 });
 
+// Get All Emergencies (Admin)
+const getAllEmergencies = asyncHandler(async (req, res) => {
+  const emergencies = await Emergency.find({})
+    .populate("user", "uname emergencyNo email")
+    .sort({ createdAt: -1 });
 
-const getAllEmergencies = asyncHandler(async(req,res) => {
-  const data = []
-  const emer = await Emergency.find({});
-  for(const x of emer){
-    console.log(x.createdAt)
-    const user = await User.findById(x.user);
-    if(user){
-      data.push({
-        _id: x._id,
-        mapLct: x.emergencyLctOnMap,
-        addressOfInc: x.addressOfIncd,
-        username: user.uname,
-        userId: user._id,
-        emergencyNo: user.emergencyNo,
-        isResolved: x.isResolved,
-        createdAt: x.createdAt,
-        updatedAt: x.updatedAt
-      })
-    }
-  }
-  res.status(200).json(data)
+  const data = emergencies.map((e) => ({
+    _id: e._id,
+    username: e.user?.uname,
+    emergencyNo: e.user?.emergencyNo,
+    email: e.user?.email,
+    mapLct: e.emergencyLctOnMap,
+    addressOfInc: e.addressOfIncd,
+    pincode: e.pincode,
+    isResolved: e.isResolved,
+    createdAt: e.createdAt,
+  }));
+
+  res.status(200).json(data);
 });
 
+// Get Single Emergency
+const getSinglEmergency = asyncHandler(async (req, res) => {
+  const emergency = await Emergency.findById(req.params.id).populate(
+    "user",
+    "uname emergencyNo email"
+  );
 
-const getSinglEmergency = asyncHandler(async(req,res) => {
-  const id = req.params.id;
-  const emergency = await Emergency.findById(id);
-  if(emergency){
-    emergency.isResolved = true;
-    await emergency.save();
-    const user = await User.findById(emergency.user)
-    if(user){
-      res.status(200).json({
-        
-          _id: emergency._id,
-          mapLct: emergency.emergencyLctOnMap,
-          addressOfInc: emergency.addressOfIncd,
-          username: user.uname,
-          emergencyNo: user.emergencyNo,
-          isResolved: emergency.isResolved
-        
-      })
-    }
-
-    
+  if (!emergency) {
+    return res.status(404).json({ message: "Emergency not found" });
   }
-})
 
+  res.status(200).json({
+    _id: emergency._id,
+    username: emergency.user?.uname,
+    emergencyNo: emergency.user?.emergencyNo,
+    email: emergency.user?.email,
+    mapLct: emergency.emergencyLctOnMap,
+    addressOfInc: emergency.addressOfIncd,
+    pincode: emergency.pincode,
+    isResolved: emergency.isResolved,
+    createdAt: emergency.createdAt,
+  });
+});
 
-const emergencyUpdate = asyncHandler(async(req,res) => {
-  const emerg = req.params.id;
-  const emerge = await Emergency.findById(emerg);
-  if(emerge){
-    emerge.isResolved = true
-    await emerge.save()
-    res.status(200).json({message: "Resolved"})
+// Mark Emergency as Resolved
+const emergencyUpdate = asyncHandler(async (req, res) => {
+  const emergency = await Emergency.findById(req.params.id);
+
+  if (!emergency) {
+    return res.status(404).json({ message: "Emergency not found" });
   }
-})
-module.exports = { sendemergencyCntrl,getAllEmergencies,getSinglEmergency,emergencyUpdate };
+
+  emergency.isResolved = true;
+  await emergency.save();
+
+  res.status(200).json({ message: "Emergency marked as resolved" });
+});
+
+module.exports = {
+  sendemergencyCntrl,
+  getAllEmergencies,
+  getSinglEmergency,
+  emergencyUpdate,
+};

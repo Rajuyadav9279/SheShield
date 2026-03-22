@@ -1,9 +1,27 @@
-const Router = require("express");
-const router = Router();
-const validateToken = require('../middlewares/validateToken');
-const { sendemergencyCntrl,getAllEmergencies,getSinglEmergency,emergencyUpdate } = require("../controllers/emergencyCntrl");
+const express = require("express");
+const router = express.Router();
 
-router.route("/emergencyPressed").post(sendemergencyCntrl);
-router.route('/').get(getAllEmergencies)
-router.route('/:id').get(getSinglEmergency).patch(emergencyUpdate)
+// SOS Route
+router.post("/emergencyPressed", async (req, res) => {
+  try {
+    const { userId, lat, long } = req.body;
+
+    console.log("SOS Received:");
+    console.log("User:", userId);
+    console.log("Latitude:", lat);
+    console.log("Longitude:", long);
+
+    res.status(200).json({
+      success: true,
+      message: "Emergency sent successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
+
 module.exports = router;
