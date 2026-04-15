@@ -98,6 +98,7 @@ const getAllEmergencies = asyncHandler(async (req, res) => {
 
   const data = emergencies.map((e) => ({
     _id: e._id,
+    userId: e.user?._id,
     username: e.user?.uname,
     emergencyNo: e.user?.emergencyNo,
     email: e.user?.email,

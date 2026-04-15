@@ -7,6 +7,7 @@ const userRoutes = require("./routes/userRoutes");
 const incRoutes = require("./routes/incidentRoutes");
 const emergencyRoutes = require("./routes/emergencyRoutes");
 const chatRoutes = require("./routes/chatRoutes");
+const locationRoutes = require("./routes/locationRoutes");
 
 require("dotenv").config();
 
@@ -35,6 +36,7 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/incidents", incRoutes);
 app.use("/api/v1/emergency", emergencyRoutes);
 app.use("/api/v1/chats", chatRoutes);
+app.use("/api/v1/location", locationRoutes);
 
 // Error handler
 app.use(errorHandler);

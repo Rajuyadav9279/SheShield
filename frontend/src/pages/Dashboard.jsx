@@ -89,6 +89,7 @@ const Dashboard = () => {
             <tr>
               <th scope="col">Name</th>
               <th scope="col">Address of Incident</th>
+              <th scope="col">Live Track</th>
               <th scope="col">Map View</th>
               <th scope="col">Emergency No.</th>
               <th scope="col">Incident recorded at</th>
@@ -105,13 +106,27 @@ const Dashboard = () => {
                   </th>
                   <td>{ee.addressOfInc}</td>
                   <td>
+                    {ee.userId ? (
+                      <a
+                        href={`/livelocation/${ee.userId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn btn-danger"
+                      >
+                        🔴 Live Track
+                      </a>
+                    ) : (
+                      "N/A"
+                    )}
+                  </td>
+                  <td>
                     <a
                       href={ee.mapLct}
                       target="_blank"
                       rel="noreferrer"
                       className="btn btn-primary"
                     >
-                      View in map
+                      View static map
                     </a>
                   </td>
                   <td>{ee.emergencyNo}</td>

@@ -16,6 +16,7 @@ import AboutUs2 from "./pages/AboutUs2";
 import ContactUs from "./Components/ContactUs";
 import ChatScreen from "./pages/ChatScreen";
 import FloatingSOS from "./Components/FloatingSOS";
+import LiveLocationView from "./pages/LiveLocationView";
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
         <Route path="/incident" element={<Incident />} />
         <Route path="/closedreport" element={<CloseFile />} />
         <Route path="/chat" element={<ChatScreen />} />
+        <Route path="/livelocation/:userId" element={<LiveLocationView />} />
       </Routes>
     </Router>
   );

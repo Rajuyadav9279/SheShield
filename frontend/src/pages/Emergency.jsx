@@ -45,6 +45,31 @@ const Emergency = () => {
 
       if (res.status === 200) {
         toast.success("SOS SENT SUCCESSFULLY");
+        toast.success("Live Location Tracking Started! 📍");
+
+        // Start live tracking
+        if (navigator.geolocation) {
+          navigator.geolocation.watchPosition(
+            async (pos) => {
+              try {
+                await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:8000"}/api/v1/location/update`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ 
+                    userId: auth?.user?._id, 
+                    lat: pos.coords.latitude, 
+                    long: pos.coords.longitude 
+                  })
+                });
+              } catch (e) {
+                console.error("Live track error:", e);
+              }
+            },
+            (err) => console.error("Watch location error:", err),
+            { enableHighAccuracy: true, maximumAge: 2000 }
+          );
+        }
+
       } else {
         toast.error(data.message);
       }
