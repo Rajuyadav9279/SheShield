@@ -15,12 +15,16 @@ import CloseFile from "./pages/CloseFile";
 import AboutUs2 from "./pages/AboutUs2";
 import ContactUs from "./Components/ContactUs";
 import ChatScreen from "./pages/ChatScreen";
+import FloatingSOS from "./Components/FloatingSOS";
 
 function App() {
   return (
     <Router>
       {/* Toast Messages */}
       <Toaster position="top-right" />
+      
+      {/* Global Floating SOS Button */}
+      <FloatingSOS />
 
       <Routes>
         <Route path="/" element={<Home />} />
