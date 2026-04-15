@@ -10,7 +10,7 @@ const Report = () => {
   const [pincodeOfIncident, setPincodeOfIncident] = useState('');
   const [address, setAddress] = useState('');
 
-  const BASE_URL = "http://localhost:8000/api/v1"; // Your local backend
+  const BASE_URL = `${process.env.REACT_APP_API_URL || "http://localhost:8000"}/api/v1`; // Your local backend
 
   const handleSubmit = async (e) => {
     e.preventDefault();

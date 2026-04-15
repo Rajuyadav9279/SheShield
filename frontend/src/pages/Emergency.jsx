@@ -31,7 +31,7 @@ const Emergency = () => {
       };
 
       const res = await fetch(
-        "http://localhost:8000/api/v1/emergency/emergencyPressed",
+        `${process.env.REACT_APP_API_URL || "http://localhost:8000"}/api/v1/emergency/emergencyPressed`,
         {
           method: "POST",
           headers: {

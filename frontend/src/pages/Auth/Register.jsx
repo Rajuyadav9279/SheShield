@@ -45,7 +45,7 @@ const Register = () => {
 
         try {
             const res = await axios.post(
-                "http://localhost:8000/api/v1/users/register",
+                `${process.env.REACT_APP_API_URL || "http://localhost:8000"}/api/v1/users/register`,
                 {
                     uname,
                     email,

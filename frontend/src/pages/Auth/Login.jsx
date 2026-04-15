@@ -40,7 +40,7 @@ const Login = () => {
 
     try {
       // Use your local backend URL if remote is suspended
-      const res = await axios.post('http://localhost:8000/api/v1/users/login', {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL || "http://localhost:8000"}/api/v1/users/login`, {
         email: trimmedEmail,
         password: trimmedPassword,
       });
