@@ -1,17 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const { Incident } = require('../models/incidentRptModel');
-const fs = require('fs');
-const AWS = require('aws-sdk');
 require('dotenv').config();
-
-// AWS CONFIG
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: 'us-east-2'
-});
-
-const s3 = new AWS.S3();
 
 // ================= ADD INCIDENT =================
 const addIncident = asyncHandler(async (req, res) => {
