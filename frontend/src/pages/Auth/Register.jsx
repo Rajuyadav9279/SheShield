@@ -22,38 +22,45 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Register clicked"); // ✅ DEBUG
 
-        if (!uname.trim()) return toast.error('Name is required');
+        const tUname = uname.trim();
+        const tEmail = email.trim();
+        const tPhone = phone.trim();
+        const tPassword = password.trim();
+        const tEmergencyNo = emergencyNo.trim();
+        const tEmergencyMail = emergencyMail.trim();
+        const tPincode = pincode.trim();
 
-        if (!email.trim()) {
+        if (!tUname) return toast.error('Name is required');
+
+        if (!tEmail) {
             toast.error('Email is required');
             return;
         }
-        if (!validateEmail(email)) {
+        if (!validateEmail(tEmail)) {
             toast.error('Invalid Email Format');
             return;
         }
 
-        if (!phone.trim()) return toast.error('Phone Number is required');
-        if (!password.trim()) return toast.error('Password is required');
-        if (!emergencyNo.trim()) return toast.error('Emergency Number is required');
-        if (phone === emergencyNo) return toast.error('Numbers must be different');
-        if (!emergencyMail.trim()) return toast.error('Emergency Email is required');
-        if (email === emergencyMail) return toast.error('Emails must be different');
-        if (!pincode.trim()) return toast.error('Pincode is required');
+        if (!tPhone) return toast.error('Phone Number is required');
+        if (!tPassword) return toast.error('Password is required');
+        if (!tEmergencyNo) return toast.error('Emergency Number is required');
+        if (tPhone === tEmergencyNo) return toast.error('Numbers must be different');
+        if (!tEmergencyMail) return toast.error('Emergency Email is required');
+        if (tEmail === tEmergencyMail) return toast.error('Emails must be different');
+        if (!tPincode) return toast.error('Pincode is required');
 
         try {
             const res = await axios.post(
                 `${process.env.REACT_APP_API_URL || "http://localhost:8000"}/api/v1/users/register`,
                 {
-                    uname,
-                    email,
-                    phone,
-                    password,
-                    emergencyNo,
-                    emergencyMail,
-                    pincode
+                    uname: tUname,
+                    email: tEmail,
+                    phone: tPhone,
+                    password: tPassword,
+                    emergencyNo: tEmergencyNo,
+                    emergencyMail: tEmergencyMail,
+                    pincode: tPincode
                 }
             );
 
