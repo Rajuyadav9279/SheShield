@@ -121,6 +121,17 @@ const Emergency = () => {
                   <PiShieldCheckBold size={180} color="red" />
                 </button>
 
+                <div className="mt-5">
+                  <h4 className="fw-bold mb-3">National Emergency Helplines</h4>
+                  <div className="d-flex flex-wrap justify-content-center gap-3">
+                    <a href="tel:112" className="btn btn-danger btn-lg rounded-pill fw-bold px-4 py-2 shadow-sm d-flex align-items-center gap-2">
+                      🚓 Police Helpline (112)
+                    </a>
+                    <a href="tel:1091" className="btn btn-danger btn-lg rounded-pill fw-bold px-4 py-2 shadow-sm d-flex align-items-center gap-2">
+                      👩 Women Helpline (1091)
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
